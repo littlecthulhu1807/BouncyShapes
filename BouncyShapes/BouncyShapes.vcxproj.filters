@@ -38,17 +38,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\external\SFML\bin\sfml-audio-d-3.dll" />
-    <None Include="..\external\SFML\bin\sfml-graphics-3.dll" />
-    <None Include="..\external\SFML\bin\sfml-graphics-d-3.dll" />
-    <None Include="..\external\SFML\bin\sfml-network-3.dll" />
-    <None Include="..\external\SFML\bin\sfml-network-d-3.dll" />
-    <None Include="..\external\SFML\bin\sfml-system-3.dll" />
-    <None Include="..\external\SFML\bin\sfml-system-d-3.dll" />
-    <None Include="..\external\SFML\bin\sfml-window-3.dll" />
-    <None Include="..\external\SFML\bin\sfml-window-d-3.dll" />
-  </ItemGroup>
-  <ItemGroup>
     <CopyFileToFolders Include="..\external\SFML\bin\sfml-audio-3.dll" />
+    <CopyFileToFolders Include="..\external\SFML\bin\sfml-audio-d-3.dll" />
+    <CopyFileToFolders Include="..\external\SFML\bin\sfml-graphics-3.dll" />
+    <CopyFileToFolders Include="..\external\SFML\bin\sfml-graphics-d-3.dll" />
+    <CopyFileToFolders Include="..\external\SFML\bin\sfml-network-3.dll" />
+    <CopyFileToFolders Include="..\external\SFML\bin\sfml-network-d-3.dll" />
+    <CopyFileToFolders Include="..\external\SFML\bin\sfml-system-3.dll" />
+    <CopyFileToFolders Include="..\external\SFML\bin\sfml-system-d-3.dll" />
+    <CopyFileToFolders Include="..\external\SFML\bin\sfml-window-3.dll" />
+    <CopyFileToFolders Include="..\external\SFML\bin\sfml-window-d-3.dll" />
+    <CopyFileToFolders Include="config\config.txt" />
   </ItemGroup>
 </Project>
