@@ -16,36 +16,40 @@ struct GameShape{
     float speedX{};
     float speedY{};
     float colorF[3] {};
+    float currentPosX{};
+    float currentPosY{};
     uint8_t colorI[3] {};
     float scaler{ 1 };
 
     GameShape(std::string name, float posX, float posY, float speedX, float speedY, float r, float g, float b, float width, float height):
     name(name),
     speedX(speedX),
-    speedY(speedY){
+    speedY(speedY),
+    currentPosX(posX),
+    currentPosY(posY){
         colorI[0] = r;
         colorI[1] = g;
         colorI[2] = b;
         colorItoF();
         shapeType = new sf::RectangleShape({width, height});
         shapeType->setOrigin(shapeType->getGeometricCenter());
-        shapeType->setPosition({ posX, posY });
+        shapeType->setPosition({ currentPosX, currentPosY });
         shapeType->setFillColor({colorI[0], colorI[1], colorI[2]});
-        std::cout << "Created Rect at: " << posX << ' ' << posY << '\n';
     }
     GameShape(std::string name, float posX, float posY, float speedX, float speedY, float r, float g, float b, float radius):
     name(name),
     speedX(speedX),
-    speedY(speedY){
+    speedY(speedY),
+    currentPosX(posX),
+    currentPosY(posY) {
         colorI[0] = r;
         colorI[1] = g;
         colorI[2] = b;
         colorItoF();
         shapeType = new sf::CircleShape(radius);
         shapeType->setOrigin(shapeType->getGeometricCenter());
-        shapeType->setPosition({ posX, posY });
+        shapeType->setPosition({ currentPosX, currentPosY });
         shapeType->setFillColor({ colorI[0], colorI[1], colorI[2] });
-        std::cout << "Created Circle at: " << posX << ' ' << posY << '\n';
     }
     ~GameShape() {
         std::cout << "Called Shape destructor\n";
@@ -54,27 +58,37 @@ struct GameShape{
     };
 
     void colorItoF() {
-        colorF[0] = uint8_t(colorI[0] * 255);
-        colorF[1] = uint8_t(colorI[1] * 255);
-        colorF[2] = uint8_t(colorI[2] * 255);
+        colorF[0] = uint8_t(colorI[0] / 255);
+        colorF[1] = uint8_t(colorI[1] / 255);
+        colorF[2] = uint8_t(colorI[2] / 255);
     }
     void colorFtoI() {
-        colorI[0] = float(colorF[0] / 255);
-        colorI[1] = float(colorF[1] / 255);
-        colorI[2] = float(colorF[2] / 255);
-    }
-    void printContent() {
-        std::cout << name << ": " << shapeType << " Color float: " << colorF[0] << colorF[1] << colorF[2] << " Color uInt: " << colorI[0] << colorI[1] << colorI[2] << '\n';
+        colorI[0] = float(colorF[0] * 255);
+        colorI[1] = float(colorF[1] * 255);
+        colorI[2] = float(colorF[2] * 255);
     }
     void updateShape() {
         shapeType->setScale({scaler, scaler});
+        colorFtoI();
+        shapeType->setFillColor({ colorI[0], colorI[1], colorI[2] });
+    }
+    void moveCalc(unsigned int width, unsigned int height) {
+        if(shapeType->getPosition().x >= width || shapeType->getPosition().x <= 0){
+            speedX = -speedX;
+        }
+        if (shapeType->getPosition().y >= height || shapeType->getPosition().y <= 0) {
+            speedY = -speedY;
+        }
+        shapeType->setPosition({ currentPosX + speedX, currentPosY +speedY});
+        currentPosX = shapeType->getPosition().x;
+        currentPosY = shapeType->getPosition().y;
     }
 
 };
 
 //function declaration
 void pollEvent(sf::RenderWindow& window);
-void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector);
+void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector, unsigned int& windowWidth, unsigned int& windowHeight);
 
 //Main
 int main() {
@@ -82,6 +96,8 @@ int main() {
     std::vector<GameShape*> shapesInGame;
     unsigned int width = 1280;
     unsigned int height = 760;
+
+    loadFromFile("config/config.txt", shapesInGame, width, height);
 
     sf::RenderWindow window(sf::VideoMode({ width, height }), "BouncyShapes");
     window.setFramerateLimit(60);
@@ -93,11 +109,10 @@ int main() {
 
     sf::Clock deltaClock;
 
-    loadFromFile("config/config.txt", shapesInGame);
 
-    //scale the imgui ui and text size by 2
-    ImGui::GetStyle().ScaleAllSizes(2.0f);
-    ImGui::GetIO().FontGlobalScale = 2.0f;
+    //scale the imgui ui and text size
+    ImGui::GetStyle().ScaleAllSizes(1.0f);
+    ImGui::GetIO().FontGlobalScale = 1.0f;
 
     std::vector<const char*> items;
     for (auto& s : shapesInGame) { items.push_back(s->name.c_str()); }
@@ -110,6 +125,7 @@ int main() {
         //Physics Update
         for (auto s : shapesInGame) {
             s->updateShape();
+            s->moveCalc(width, height);
         }
 
         //Update ImGui
@@ -121,6 +137,9 @@ int main() {
         ImGui::Combo("Name", &itemIndex, items.data(), (int)items.size());
         ImGui::Checkbox("draw", &shapesInGame[itemIndex]->draw);
         ImGui::SliderFloat("Scale", &shapesInGame[itemIndex]->scaler,0.0f, 4.0f);
+        ImGui::SliderFloat("SpeedX", { &shapesInGame[itemIndex]->speedX}, -8.0f, 8.0f);
+        ImGui::SliderFloat("SpeedY", { &shapesInGame[itemIndex]->speedY }, -8.0f, 8.0f);
+        ImGui::ColorEdit3("Name", shapesInGame[itemIndex]->colorF);
         ImGui::End();
 
         //Clear Window
@@ -156,16 +175,14 @@ void pollEvent(sf::RenderWindow& window) {
     }
 }
 
-void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector) {
+void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector, unsigned int& windowWidth, unsigned int& windowHeight) {
     std::ifstream fin(filename);
     std::string temp;
 
     while (fin >> temp){
         if (temp == "Window") {
-            int width;
-            int height;
-            fin >> width >> height;
-            std::cout << width << ' ' << height << '\n';
+            fin >> windowWidth >> windowHeight;
+            std::cout << windowWidth << ' ' << windowHeight << '\n';
         }
         else if (temp == "Font") {
             std::cout << "A Font \n";
