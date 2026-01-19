@@ -7,10 +7,6 @@
 
 #include<SFML/Graphics.hpp>
 
-//function declaration
-void pollEvent(sf::RenderWindow& window);
-void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector);
-
 //Structs and Classes
 struct GameShape{
 
@@ -70,8 +66,15 @@ struct GameShape{
     void printContent() {
         std::cout << name << ": " << shapeType << " Color float: " << colorF[0] << colorF[1] << colorF[2] << " Color uInt: " << colorI[0] << colorI[1] << colorI[2] << '\n';
     }
+    void updateShape() {
+        shapeType->setScale({scaler, scaler});
+    }
 
 };
+
+//function declaration
+void pollEvent(sf::RenderWindow& window);
+void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector);
 
 //Main
 int main() {
@@ -96,12 +99,18 @@ int main() {
     ImGui::GetStyle().ScaleAllSizes(2.0f);
     ImGui::GetIO().FontGlobalScale = 2.0f;
 
+    std::vector<const char*> items;
+    for (auto& s : shapesInGame) { items.push_back(s->name.c_str()); }
+    int itemIndex = 0;
+
     while (window.isOpen()) {
         //Event handling
         pollEvent(window);
 
         //Physics Update
-
+        for (auto s : shapesInGame) {
+            s->updateShape();
+        }
 
         //Update ImGui
         ImGui::SFML::Update(window, deltaClock.restart());
@@ -109,13 +118,17 @@ int main() {
         //Draw UI
         ImGui::Begin("Hello, world!");
         ImGui::Button("Look at this pretty button");
+        ImGui::Combo("Name", &itemIndex, items.data(), (int)items.size());
+        ImGui::Checkbox("draw", &shapesInGame[itemIndex]->draw);
+        ImGui::SliderFloat("Scale", &shapesInGame[itemIndex]->scaler,0.0f, 4.0f);
         ImGui::End();
 
         //Clear Window
         window.clear();
         //Draw window
         for (auto s : shapesInGame) {
-            window.draw(*s->shapeType);
+            if(s->draw)
+                window.draw(*s->shapeType);
         }
         
         ImGui::SFML::Render(window);
