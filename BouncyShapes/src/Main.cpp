@@ -101,6 +101,9 @@ struct GameShape{
             shapeType->getPosition().y - (shapeText->getLocalBounds().size.y / 2)
             });
     }
+    void updateText(std::string newName) {
+        shapeText->setString(newName);
+    }
 };
 
 //function declaration
@@ -114,6 +117,8 @@ int main() {
     uint8_t fontColor[3]{};
     uint8_t fontSize;
     std::vector<GameShape*> shapesInGame;
+    static char nameBuffer[128];
+    static char bottomTextBuffer[128];
 
     unsigned int width = 1280;
     unsigned int height = 760;
@@ -165,13 +170,24 @@ int main() {
 
         //Draw UI
         ImGui::Begin("Hello, world!");
-        ImGui::Button("Look at this pretty button");
         ImGui::Combo("Name", &itemIndex, items.data(), (int)items.size());
         ImGui::Checkbox("draw", &shapesInGame[itemIndex]->draw);
         ImGui::SliderFloat("Scale", &shapesInGame[itemIndex]->scaler,0.0f, 4.0f);
         ImGui::SliderFloat("SpeedX", { &shapesInGame[itemIndex]->speedX}, -8.0f, 8.0f);
         ImGui::SliderFloat("SpeedY", { &shapesInGame[itemIndex]->speedY }, -8.0f, 8.0f);
-        ImGui::ColorEdit3("Name", shapesInGame[itemIndex]->colorF);
+        ImGui::ColorEdit3("Color", shapesInGame[itemIndex]->colorF);
+
+        ImGui::InputText("shapeName", nameBuffer, 128);
+        ImGui::SameLine();
+        if (ImGui::Button("Change Shape Name")) {
+            shapesInGame[itemIndex]->updateText(nameBuffer);
+        }
+
+        ImGui::InputText("bottomText", bottomTextBuffer, 128);
+        ImGui::SameLine();
+        if (ImGui::Button("Change Bottom Text")) {
+            bottomText.setString(bottomTextBuffer);
+        }
         ImGui::End();
 
         //Clear Window
