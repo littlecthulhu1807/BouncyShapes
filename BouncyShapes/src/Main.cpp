@@ -28,14 +28,16 @@ struct GameShape{
     speedY(speedY),
     currentPosX(posX),
     currentPosY(posY){
-        colorI[0] = r;
-        colorI[1] = g;
-        colorI[2] = b;
+        colorI[0] = uint8_t(r);
+        colorI[1] = uint8_t(g);
+        colorI[2] = uint8_t(b);
         colorItoF();
         shapeType = new sf::RectangleShape({width, height});
         shapeType->setOrigin(shapeType->getGeometricCenter());
         shapeType->setPosition({ currentPosX, currentPosY });
         shapeType->setFillColor({colorI[0], colorI[1], colorI[2]});
+        std::cout << name << " || " << int(colorI[0]) << " || " << int(colorI[1]) << " || " << int(colorI[2]) << '\n';
+        std::cout << name << " || " << colorF[0] << " || " << colorF[1] << " || " << colorF[2] << '\n';
     }
     GameShape(std::string name, float posX, float posY, float speedX, float speedY, float r, float g, float b, float radius):
     name(name),
@@ -43,14 +45,16 @@ struct GameShape{
     speedY(speedY),
     currentPosX(posX),
     currentPosY(posY) {
-        colorI[0] = r;
-        colorI[1] = g;
-        colorI[2] = b;
+        colorI[0] = uint8_t(r);
+        colorI[1] = uint8_t(g);
+        colorI[2] = uint8_t(b);
         colorItoF();
         shapeType = new sf::CircleShape(radius);
         shapeType->setOrigin(shapeType->getGeometricCenter());
         shapeType->setPosition({ currentPosX, currentPosY });
         shapeType->setFillColor({ colorI[0], colorI[1], colorI[2] });
+        std::cout << name << " || " << int(colorI[0]) << " || " << int(colorI[1]) << " || " << int(colorI[2]) << '\n';
+        std::cout << name << " || " << colorF[0] << " || " << colorF[1] << " || " << colorF[2] << '\n';
     }
     ~GameShape() {
         std::cout << "Called Shape destructor\n";
@@ -61,14 +65,14 @@ struct GameShape{
     };
 
     void colorItoF() {
-        colorF[0] = uint8_t(colorI[0] / 255);
-        colorF[1] = uint8_t(colorI[1] / 255);
-        colorF[2] = uint8_t(colorI[2] / 255);
+        colorF[0] = float(colorI[0]) / 255.0f;
+        colorF[1] = float(colorI[1]) / 255.0f;
+        colorF[2] = float(colorI[2]) / 255.0f;
     }
     void colorFtoI() {
-        colorI[0] = float(colorF[0] * 255);
-        colorI[1] = float(colorF[1] * 255);
-        colorI[2] = float(colorF[2] * 255);
+        colorI[0] = uint8_t(colorF[0] * 255);
+        colorI[1] = uint8_t(colorF[1] * 255);
+        colorI[2] = uint8_t(colorF[2] * 255);
     }
     void updateShape() {
         shapeType->setScale({scaler, scaler});
@@ -138,6 +142,7 @@ int main() {
 
     sf::Clock deltaClock;
 
+    //bottom text setup
     sf::Text bottomText(mainFont);
     bottomText.setString("Bottom Text Here");
     bottomText.setCharacterSize(fontSize);
@@ -149,10 +154,16 @@ int main() {
     ImGui::GetStyle().ScaleAllSizes(1.0f);
     ImGui::GetIO().FontGlobalScale = 1.0f;
 
+    //create the vector for the combo box and add the shapes
     std::vector<const char*> items;
     for (auto& s : shapesInGame) { items.push_back(s->name.c_str()); }
     int itemIndex = 0;
 
+    //Debug stuff
+    sf::RectangleShape shapeO({ 50,50 });
+    shapeO.setPosition({ float(width) / 2.0f, float(height) / 2.0f });
+    shapeO.setFillColor({170, 0, 170});
+    //Debug end
 
 
     while (window.isOpen()) {
@@ -169,7 +180,7 @@ int main() {
         ImGui::SFML::Update(window, deltaClock.restart());
 
         //Draw UI
-        ImGui::Begin("Hello, world!");
+        ImGui::Begin("Shape Controls");
         ImGui::Combo("Name", &itemIndex, items.data(), (int)items.size());
         ImGui::Checkbox("draw", &shapesInGame[itemIndex]->draw);
         ImGui::SliderFloat("Scale", &shapesInGame[itemIndex]->scaler,0.0f, 4.0f);
@@ -200,6 +211,7 @@ int main() {
             }
         }
         window.draw(bottomText);
+        window.draw(shapeO);
         
         ImGui::SFML::Render(window);
         //Display Window
@@ -233,7 +245,6 @@ void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector, un
     while (fin >> temp){
         if (temp == "Window") {
             fin >> windowWidth >> windowHeight;
-            std::cout << windowWidth << ' ' << windowHeight << '\n';
         }
         else if (temp == "Font") {
             std::string fontBuffer;
@@ -258,12 +269,13 @@ void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector, un
             float posY;
             float speedX;
             float speedY;
-            float r;
-            float g;
-            float b;
+            int r;
+            int g;
+            int b;
             float radius;
             fin >> name >> posX >> posY >> speedX >> speedY >> r >> g >> b >> radius;
             shapeVector.push_back(new GameShape(name, posX, posY, speedX, speedY, r, g, b, radius));
+            //std::cout << name << " || " << r << " || " << g << " || " << b << '\n';
         }
         else if (temp == "Rectange") {
             std::string name;
@@ -271,13 +283,19 @@ void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector, un
             float posY;
             float speedX;
             float speedY;
-            float r;
-            float g;
-            float b;
+            int r;
+            int g;
+            int b;
             float width;
             float height;
             fin >> name >> posX >> posY >> speedX >> speedY >> r >> g >> b >> width >> height;
             shapeVector.push_back(new GameShape(name, posX, posY, speedX, speedY, r, g, b, width, height));
+            //std::cout << name << " || " << r << " || " << g << " || " << b << '\n';
         }
     }
 }
+
+/*TO DO IMPROVEMENT IDEAS:
+* add unique IDs to the shapes. having two shapes with the same name will lead to bugs
+* 
+*/
