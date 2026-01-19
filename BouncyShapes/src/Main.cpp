@@ -88,16 +88,20 @@ struct GameShape{
 
 //function declaration
 void pollEvent(sf::RenderWindow& window);
-void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector, unsigned int& windowWidth, unsigned int& windowHeight);
+void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector, unsigned int& windowWidth, unsigned int& windowHeight, sf::Font& font, uint8_t* rgb, uint8_t& fontSize);
 
 //Main
 int main() {
     
+    sf::Font mainFont;
+    uint8_t fontColor[3]{};
+    uint8_t fontSize;
     std::vector<GameShape*> shapesInGame;
+
     unsigned int width = 1280;
     unsigned int height = 760;
 
-    loadFromFile("config/config.txt", shapesInGame, width, height);
+    loadFromFile("config/config.txt", shapesInGame, width, height, mainFont, fontColor, fontSize);
 
     sf::RenderWindow window(sf::VideoMode({ width, height }), "BouncyShapes");
     window.setFramerateLimit(60);
@@ -109,6 +113,11 @@ int main() {
 
     sf::Clock deltaClock;
 
+    sf::Text bottomText(mainFont);
+    bottomText.setString("Bottom Text Here");
+    bottomText.setCharacterSize(fontSize);
+    bottomText.setFillColor({ fontColor[0], fontColor[1], fontColor[2] });
+
 
     //scale the imgui ui and text size
     ImGui::GetStyle().ScaleAllSizes(1.0f);
@@ -117,6 +126,8 @@ int main() {
     std::vector<const char*> items;
     for (auto& s : shapesInGame) { items.push_back(s->name.c_str()); }
     int itemIndex = 0;
+
+
 
     while (window.isOpen()) {
         //Event handling
@@ -149,6 +160,7 @@ int main() {
             if(s->draw)
                 window.draw(*s->shapeType);
         }
+        window.draw(bottomText);
         
         ImGui::SFML::Render(window);
         //Display Window
@@ -175,7 +187,7 @@ void pollEvent(sf::RenderWindow& window) {
     }
 }
 
-void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector, unsigned int& windowWidth, unsigned int& windowHeight) {
+void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector, unsigned int& windowWidth, unsigned int& windowHeight, sf::Font& font, uint8_t* rgb, uint8_t& fontSize) {
     std::ifstream fin(filename);
     std::string temp;
 
@@ -185,7 +197,21 @@ void loadFromFile(const char* filename, std::vector<GameShape*>& shapeVector, un
             std::cout << windowWidth << ' ' << windowHeight << '\n';
         }
         else if (temp == "Font") {
-            std::cout << "A Font \n";
+            std::string fontBuffer;
+            int sizeBuffer;
+            int rBuffer;
+            int gBuffer;
+            int bBuffer;
+            fin >> fontBuffer >> sizeBuffer >> rBuffer >> gBuffer >> bBuffer;
+            rgb[0] = uint8_t(rBuffer);
+            rgb[1] = uint8_t(gBuffer);
+            rgb[2] = uint8_t(bBuffer);
+            fontSize = uint8_t(sizeBuffer);
+            //std::cout << fontBuffer << "Font Color: " << sizeBuffer << int(rgb[0]) << int(rgb[1]) << int(rgb[2]) << '\n';
+            if (!font.openFromFile(fontBuffer.c_str()))
+            {
+                std::cout << "COULD NOT LOAD FONT" << fontBuffer << '\n';
+            }
         }
         else if (temp == "Circle") {
             std::string name;
