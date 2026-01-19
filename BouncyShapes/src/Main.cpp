@@ -20,6 +20,7 @@ struct GameShape{
     float currentPosY{};
     uint8_t colorI[3] {};
     float scaler{ 1 };
+    sf::Text* shapeText;
 
     GameShape(std::string name, float posX, float posY, float speedX, float speedY, float r, float g, float b, float width, float height):
     name(name),
@@ -55,6 +56,8 @@ struct GameShape{
         std::cout << "Called Shape destructor\n";
         delete shapeType;
         shapeType = nullptr;
+        delete shapeText;
+        shapeText = nullptr;
     };
 
     void colorItoF() {
@@ -80,10 +83,24 @@ struct GameShape{
             speedY = -speedY;
         }
         shapeType->setPosition({ currentPosX + speedX, currentPosY +speedY});
+        shapeText->setPosition(shapeType->getPosition());
         currentPosX = shapeType->getPosition().x;
         currentPosY = shapeType->getPosition().y;
+        shapeText->setPosition({
+            shapeType->getPosition().x - (shapeText->getLocalBounds().size.x / 2),
+            shapeType->getPosition().y - (shapeText->getLocalBounds().size.y / 2)
+            });
     }
-
+    void textInit(sf::Font* sfFont) {
+        shapeText = new sf::Text(*sfFont);
+        shapeText->setString(name);
+        shapeText->setCharacterSize(16);
+        shapeText->setFillColor(sf::Color::White);
+        shapeText->setPosition({ 
+            shapeType->getPosition().x - (shapeText->getLocalBounds().size.x / 2),
+            shapeType->getPosition().y - (shapeText->getLocalBounds().size.y / 2)
+            });
+    }
 };
 
 //function declaration
@@ -102,6 +119,9 @@ int main() {
     unsigned int height = 760;
 
     loadFromFile("config/config.txt", shapesInGame, width, height, mainFont, fontColor, fontSize);
+    for (auto s : shapesInGame) {
+        s->textInit(&mainFont);
+    }
 
     sf::RenderWindow window(sf::VideoMode({ width, height }), "BouncyShapes");
     window.setFramerateLimit(60);
@@ -117,6 +137,7 @@ int main() {
     bottomText.setString("Bottom Text Here");
     bottomText.setCharacterSize(fontSize);
     bottomText.setFillColor({ fontColor[0], fontColor[1], fontColor[2] });
+    bottomText.setPosition({ 0, height - (bottomText.getGlobalBounds().size.y * 2) });
 
 
     //scale the imgui ui and text size
@@ -157,8 +178,10 @@ int main() {
         window.clear();
         //Draw window
         for (auto s : shapesInGame) {
-            if(s->draw)
+            if (s->draw) {
                 window.draw(*s->shapeType);
+                window.draw(*s->shapeText);
+            }
         }
         window.draw(bottomText);
         
